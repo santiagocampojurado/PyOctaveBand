@@ -166,7 +166,7 @@ def _oneoctave():
 def _deleteouters(freq, freq_d, freq_u, fs):
     idx = np.asarray(np.where(np.array(freq_u) > fs / 2))
     if any(idx[0]):
-        _printwarn('Low sampling rate, frequencies above fs/2 will be removed')
+        # _printwarn('Low sampling rate, frequencies above fs/2 will be removed')
         freq = np.delete(freq, idx).tolist()
         freq_d = np.delete(freq_d, idx).tolist()
         freq_u = np.delete(freq_u, idx).tolist()
