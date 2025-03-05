@@ -6,6 +6,7 @@ import logging
 import argparse
 from tqdm import tqdm
 import datetime
+import matplotlib.pyplot as plt
 
 
 
@@ -15,6 +16,15 @@ logging.basicConfig(
     filename='calibration_test.log', 
     filemode='w'
 )
+
+
+SPECTRUM_COLUMNS = ['31.6Hz', '63.1Hz', '125.9Hz', '251.2Hz', '501.2Hz',
+                    '1000.0Hz', '1995.3Hz', '3981.1Hz', '7943.3Hz', '12589.3Hz',
+                    '15848.9Hz'
+                ]
+
+SPECTRUM_COLUMNS_LITTLE = ['31.6Hz', '63.1Hz', '125.9Hz', '251.2Hz', '501.2Hz',
+                            '1000.0Hz', '1995.3Hz', '3981.1Hz']
 
 
 
@@ -28,6 +38,44 @@ def find_audio_folders(base_path):
 def get_audiofiles(path):
     audio_files = [file for file in os.listdir(path) if file.lower().endswith('.wav')]
     return audio_files
+
+
+
+def plot_calibration_test(df: pd.DataFrame, output_path_plot: str, audio_file: str, spectrum_columns: list = SPECTRUM_COLUMNS) -> None:
+    try:
+        logging.info("Plotting calibration test")
+
+        plt.figure(figsize=(20, 10))
+        for column in spectrum_columns:
+            plt.plot(df[column], label=column)
+
+        # legend outsode the plot
+        plt.legend(loc='center left', bbox_to_anchor=(1, 0.85))
+        # grreid
+        plt.grid()
+
+        # drawing a line on the 94db level
+        plt.axhline(y=94, color='r', linestyle='--')
+
+        plt.title(f"Spectrum levels {audio_file}")
+        plt.xlabel("Time")
+        plt.ylabel("SPL")
+
+
+        # # x limits
+        plt.xlim(0, len(df))
+        plt.tight_layout()
+
+
+        # save plot
+        plt.savefig(output_path_plot)
+        logging.info(f'Plot saved to {output_path_plot}')
+
+
+    except Exception as e:
+        logging.error(f"Error plotting calibration test: {e}")
+
+
 
 
 
@@ -137,10 +185,25 @@ def main():
                 df.to_csv(output_path, index=False)
                 logging.info(f'Output saved to {output_path}')
 
+
+
+                # ---------------- 
+                # PLOT CALIBRATION TEST
+                # ----------------
+                try:
+                    output_path_plot = os.path.join(output_folder, f'calibration_plot_{name_split}.png')
+                    plot_calibration_test(df, output_path_plot, audio_file)
+                    logging.info(f"Calibration test plot saved to: {output_path_plot}")
+                except Exception as e:
+                    logging.error(f"Error plotting calibration test: {e}")
+
+
+            # ----------------
+            # END
+            # ----------------
             except Exception as e:
                 logging.error(f"Error processing audio file: {audio_file}")
                 logging.error(e)
-
 
 
 
