@@ -56,6 +56,8 @@ def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands =0):
             spl[idx] = 20 * np.log10(np.std(y) / 2e-5)
             xb.append(signal.resample_poly(y,factor[idx],1))
         return spl.tolist(), freq, xb
+    
+    
     else:
         # Create array with SPL for each frequency band
         spl = np.zeros([len(freq)])
@@ -82,6 +84,7 @@ def _buttersosfilter(freq, freq_d, freq_u, fs, order, factor, show=0):
     for idx, (lower, upper) in enumerate(zip(freq_d, freq_u)):
         # Downsampling to improve filter coefficients
         fsd = fs / factor[idx]  # New sampling rate
+        print(f"New sampling rate: {fsd}")
         # Butterworth Filter with SOS coefficients
         sos[idx] = signal.butter(
             N=order,
