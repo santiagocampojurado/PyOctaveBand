@@ -84,7 +84,7 @@ def _buttersosfilter(freq, freq_d, freq_u, fs, order, factor, show=0):
     for idx, (lower, upper) in enumerate(zip(freq_d, freq_u)):
         # Downsampling to improve filter coefficients
         fsd = fs / factor[idx]  # New sampling rate
-        print(f"New sampling rate: {fsd}")
+        # print(f"New sampling rate: {fsd}")
         # Butterworth Filter with SOS coefficients
         sos[idx] = signal.butter(
             N=order,

@@ -16,9 +16,12 @@ def leq(levels):
 
 
 def lineal_differenciation(df: pd.DataFrame, lower_bound: float, upper_bound: float, calibration_multifinction: int, columns: list = SPECTRUM_COLUMNS) -> np.ndarray:
+    print()
+    
     df = df[columns]
     print(df)
     results = {}
+
 
     for col in df.columns:
         # print(f"Processing column: {col}")
@@ -27,12 +30,15 @@ def lineal_differenciation(df: pd.DataFrame, lower_bound: float, upper_bound: fl
         #boolean mask for the range [lower_bound, upper_bound]
         mask = (values >= lower_bound) & (values <= upper_bound)
         logging.info(f"Mask: {mask}")
+        print(f"Mask: {mask}")
+
         
 
         #finding the indices where mask is True
         true_indices = np.where(mask)[0] # [0] to get the indices
         logging.info(f"True indices: {true_indices}")
-        
+        print(f"True indices: {true_indices}")
+        # exit()
         
         if len(true_indices) == 0:
             results[col] = np.array([])
@@ -66,7 +72,7 @@ def lineal_differenciation(df: pd.DataFrame, lower_bound: float, upper_bound: fl
     for key, value in results.items():
         #apply the leq function
         results[key] = leq(value)
-    reference_1khz = results['1000.00Hz']
+    reference_1khz = results['1000.0Hz']
 
 
     # calibration coefficient

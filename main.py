@@ -8,6 +8,8 @@ import argparse
 from tqdm import tqdm
 import datetime
 import matplotlib.pyplot as plt
+from utils import *
+
 
 
 
@@ -91,8 +93,8 @@ def plot_calibration_test(df: pd.DataFrame, output_path_plot: str, audio_file: s
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Calculate SPL levels for audio files in a directory')
     parser.add_argument('-p', '--path', type=str, required=True, help='Directory to be processed')
-    parser.add_argument('-lb', '--lower_bound', type=float, default=90.0, help='Lower bound for lineal differenciation')
-    parser.add_argument('-ub', '--upper_bound', type=float, default=112.0, help='Upper bound for lineal differenciation')
+    parser.add_argument('-lb', '--lower_bound', type=float, default=175.0, help='Lower bound for lineal differenciation')
+    parser.add_argument('-ub', '--upper_bound', type=float, default=177.0, help='Upper bound for lineal differenciation')
     parser.add_argument('-t', '--threshold', type=int, default=94, help='Threshold constant for the microphone')
     return parser.parse_args()
 
@@ -167,7 +169,7 @@ def main() -> None:
                     segment = data[start_idx:start_idx + window_size]
 
                     #octave band levels for the segment
-                    levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3)
+                    levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3, order=4, show=0)
                     levels = [round(level, 2) for level in levels]
                     
                     if freq_labels is None:
@@ -210,13 +212,13 @@ def main() -> None:
                 # ----------------
                 # LINEAL DIFFERENCIATION
                 # ----------------
-                # try:
-                #     output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}.csv')
-                #     lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
-                #     lineal_diff.to_csv(output_path_lineal, index=False)
-                #     logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
-                # except Exception as e:
-                #     logging.error(f"Error in lineal differenciation: {e}")
+                try:
+                    output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}.csv')
+                    lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
+                    lineal_diff.to_csv(output_path_lineal, index=False)
+                    logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
+                except Exception as e:
+                    logging.error(f"Error in lineal differenciation: {e}")
 
 
             # ----------------
