@@ -9,6 +9,7 @@ from tqdm import tqdm
 import datetime
 import matplotlib.pyplot as plt
 from utils import *
+from config import *
 
 
 
@@ -39,14 +40,14 @@ def leq(levels):
 
 
 
-def find_audio_folders(base_path):
+def find_audio_folders(base_path: str):
     for root, dirs, files in os.walk(base_path):
         if 'AUDIO' in dirs:
             yield root
 
 
 
-def get_audiofiles(path):
+def get_audiofiles(path: str) -> list:
     audio_files = [file for file in os.listdir(path) if file.lower().endswith('.wav')]
     return audio_files
 
@@ -96,6 +97,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('-lb', '--lower_bound', type=float, default=175.0, help='Lower bound for lineal differenciation')
     parser.add_argument('-ub', '--upper_bound', type=float, default=177.0, help='Upper bound for lineal differenciation')
     parser.add_argument('-t', '--threshold', type=int, default=94, help='Threshold constant for the microphone')
+    parser.add_argument('-c', '--calibration', type=float, default=None, help='Calibration coefficient')
+    parser.add_argument('--lineal_diff', action='store_true', help='Perform lineal differenciation')
     return parser.parse_args()
 
 
@@ -107,11 +110,24 @@ def main() -> None:
     lower_bound = args.lower_bound
     upper_bound = args.upper_bound
     threshold_multifinction = args.threshold
+    calibration_coeff = args.calibration
+    lineal_diff = args.lineal_diff
     logging.info(f"Processing files in: {base_path}")
     logging.info(f"Lower bound: {lower_bound}")
     logging.info(f"Upper bound: {upper_bound}")
     logging.info(f"Threshold multifuntion: {threshold_multifinction}")
+    logging.info(f"Calibration coefficient: {calibration_coeff}")
+    logging.info(f"Lineal differenciation: {lineal_diff}")
     logging.info("")
+    
+
+    # ----------------
+    # calbration str
+    # ----------------
+    if calibration_coeff is not None:
+        cal_str = "_calibrated"
+    else:
+        cal_str = ""
 
 
 
@@ -138,6 +154,9 @@ def main() -> None:
             logging.warning(f"No audio files found in: {audio_path}")
             continue
 
+
+
+
         for audio_file in tqdm(audio_files, desc='Processing audio files'):
             try:
                 logging.info(f"Processing audio file: {audio_file}")
@@ -160,6 +179,8 @@ def main() -> None:
                 if data.ndim > 1:
                     data = data[:, 0]
 
+
+
                 # ----------------
                 # 1 SEC PROCESSING
                 # ----------------
@@ -169,12 +190,14 @@ def main() -> None:
                     segment = data[start_idx:start_idx + window_size]
 
                     #octave band levels for the segment
-                    levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3, order=4, show=0)
+                    levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3, order=4, show=0, sigbands=0, calibration_coeff=calibration_coeff)
                     levels = [round(level, 2) for level in levels]
                     
                     if freq_labels is None:
                         freq_labels = [f"{round(freq, 1)}Hz" for freq in freqs]
                     results.append(levels)
+
+
 
                 # ----------------
                 # SAVE CSV FILE
@@ -188,7 +211,8 @@ def main() -> None:
                     os.makedirs(output_folder)
                     logging.info(f"Created output folder: {output_folder}")
 
-                output_filename = f'leq_oct_{name_split}.csv'
+
+                output_filename = f'{name_split}{cal_str}.csv'
                 output_path = os.path.join(output_folder, output_filename)
                 
 
@@ -202,7 +226,7 @@ def main() -> None:
                 # PLOT CALIBRATION TEST
                 # ----------------
                 try:
-                    output_path_plot = os.path.join(output_folder, f'calibration_plot_{name_split}.png')
+                    output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}.png')
                     plot_calibration_test(df, output_path_plot, audio_file)
                     logging.info(f"Calibration test plot saved to: {output_path_plot}")
                 except Exception as e:
@@ -212,13 +236,17 @@ def main() -> None:
                 # ----------------
                 # LINEAL DIFFERENCIATION
                 # ----------------
-                try:
-                    output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}.csv')
-                    lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
-                    lineal_diff.to_csv(output_path_lineal, index=False)
-                    logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
-                except Exception as e:
-                    logging.error(f"Error in lineal differenciation: {e}")
+                if lineal_diff:
+                    try:
+                        output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}{cal_str}.csv')
+                        lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
+                        lineal_diff.to_csv(output_path_lineal, index=False)
+                        logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
+                    except Exception as e:
+                        logging.error(f"Error in lineal differenciation: {e}")
+                else:
+                    logging.info("Skipping lineal differenciation")
+
 
 
             # ----------------
@@ -229,6 +257,8 @@ def main() -> None:
                 logging.error(e)
 
 
+    logging.info("")
+    logging.info("Processing finished.")
 
 if __name__ == '__main__':
     main()

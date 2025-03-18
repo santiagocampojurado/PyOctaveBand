@@ -19,7 +19,8 @@ def lineal_differenciation(df: pd.DataFrame, lower_bound: float, upper_bound: fl
     print()
     
     df = df[columns]
-    print(df)
+    # print(df)
+    # exit()
     results = {}
 
 

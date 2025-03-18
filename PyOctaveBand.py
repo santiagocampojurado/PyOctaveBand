@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 __all__ = ['octavefilter', 'getansifrequencies', 'normalizedfreq']
 
 
-def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands =0):
+def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands=0, calibration_coeff=None):
     """
     Filter a signal with octave or fractional octave filter bank. This
     method uses a Butterworth filter with Second-Order Sections
@@ -46,6 +46,11 @@ def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands =0):
     # Get SOS filter coefficients (3D - matrix with size: [freq,order,6])
     sos = _buttersosfilter(freq, freq_d, freq_u, fs, order, factor, show)
 
+
+
+    # --------------
+    # getting spl levels
+    # --------------
     if sigbands:
         # Create array with SPL for each frequency band
         spl = np.zeros([len(freq)])
@@ -54,7 +59,18 @@ def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands =0):
             sd = signal.resample(x, round(len(x) / factor[idx]))
             y = signal.sosfilt(sos[idx], sd)
             spl[idx] = 20 * np.log10(np.std(y) / 2e-5)
+            # print dB level
+            # print(f"Frequency: {freq[idx]} Hz, Level: {spl[idx]} dB")
+
+            # store signal in bands
             xb.append(signal.resample_poly(y,factor[idx],1))
+            
+            
+            # apply calibration (+ dB)
+            if calibration_coeff is not None:
+                spl[idx] = spl[idx] + calibration_coeff[idx]
+                # print(f"Frequency: {freq[idx]} Hz, Level (calibrated): {spl[idx]} dB")
+
         return spl.tolist(), freq, xb
     
     
@@ -65,7 +81,28 @@ def octavefilter(x, fs, fraction=1, order=6, limits=None, show=0, sigbands =0):
             sd = signal.resample(x, round(len(x) / factor[idx]))
             y = signal.sosfilt(sos[idx], sd)
             spl[idx] = 20 * np.log10(np.std(y) / 2e-5)
+            # print dB level
+            # print(f"Frequency: {freq[idx]} Hz, Level: {spl[idx]} dB")
+
+            # apply calibration (+ dB)
+            if calibration_coeff is not None:
+                # print("")
+                # print("Applying calibration")
+                # print(f"Type of calibration_coeff: {type(calibration_coeff)}")
+                # print(f"Value of calibration_coeff: {calibration_coeff}")
+                # print("")
+                
+
+                # spl[idx] = spl[idx] + calibration_coeff[idx]
+                spl[idx] += calibration_coeff
+                # print(f"Frequency: {freq[idx]} Hz, Level (calibrated): {spl[idx]} dB")
+                # print("")
+                
+
         return spl.tolist(), freq
+
+
+
 
 
 def _typesignal(x):
