@@ -266,9 +266,9 @@ def _initindex(f, fr, g, b):
 
 
 def _ratio(g, x, b):
-    if b % 2:  # ODD (ANSI s1.11, eq. 3)
+    if b % 2:  # ODD (ANSI s1.11, eq. 3) # this is for the 1/3 octave because it is odd (3)
         return g ** ((x - 30) / b)
-    else:  # EVEN (ANSI s1.11, eq. 4)
+    else:  # EVEN (ANSI s1.11, eq. 4) # this is for the 1 octave
         return g ** ((2 * x - 59) / (2 * b))
 
 

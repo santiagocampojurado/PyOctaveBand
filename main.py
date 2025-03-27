@@ -1,16 +1,19 @@
+import os
 import pandas as pd
+import datetime
 import numpy as np
 from scipy.io import wavfile
-import PyOctaveBand
-import os
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 import logging
 import argparse
-from tqdm import tqdm
-import datetime
-import matplotlib.pyplot as plt
+
 from utils import *
 from config import *
 
+import PyOctaveBand
+import PyOctaveBand_reduced
 
 
 
@@ -190,7 +193,12 @@ def main() -> None:
                     segment = data[start_idx:start_idx + window_size]
 
                     #octave band levels for the segment
-                    levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3, order=4, show=0, sigbands=0, calibration_coeff=calibration_coeff)
+                    # levels, freqs = PyOctaveBand.octavefilter(segment, fs, fraction=3, order=4, show=0, sigbands=0, calibration_coeff=calibration_coeff)
+                    # levels = [round(level, 2) for level in levels]
+
+                    # testing octave band reduced
+                    # def third_octave_filter(x, fs, order=6, limits=[12, 20000], show=False, sigbands=False, calibration_coeff=None):
+                    levels, freqs = PyOctaveBand_reduced.third_octave_filter(segment, fs, order=4, show=0, sigbands=0, calibration_coeff=calibration_coeff)
                     levels = [round(level, 2) for level in levels]
                     
                     if freq_labels is None:
@@ -212,7 +220,9 @@ def main() -> None:
                     logging.info(f"Created output folder: {output_folder}")
 
 
-                output_filename = f'{name_split}{cal_str}.csv'
+                # output_filename = f'{name_split}{cal_str}.csv'
+                output_filename = f'{name_split}{cal_str}_test.csv'
+
                 output_path = os.path.join(output_folder, output_filename)
                 
 
@@ -226,7 +236,8 @@ def main() -> None:
                 # PLOT CALIBRATION TEST
                 # ----------------
                 try:
-                    output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}.png')
+                    # output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}.png')
+                    output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}_test.png')
                     plot_calibration_test(df, output_path_plot, audio_file)
                     logging.info(f"Calibration test plot saved to: {output_path_plot}")
                 except Exception as e:
@@ -236,16 +247,16 @@ def main() -> None:
                 # ----------------
                 # LINEAL DIFFERENCIATION
                 # ----------------
-                if lineal_diff:
-                    try:
-                        output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}{cal_str}.csv')
-                        lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
-                        lineal_diff.to_csv(output_path_lineal, index=False)
-                        logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
-                    except Exception as e:
-                        logging.error(f"Error in lineal differenciation: {e}")
-                else:
-                    logging.info("Skipping lineal differenciation")
+                # if lineal_diff:
+                #     try:
+                #         output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}{cal_str}.csv')
+                #         lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
+                #         lineal_diff.to_csv(output_path_lineal, index=False)
+                #         logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
+                #     except Exception as e:
+                #         logging.error(f"Error in lineal differenciation: {e}")
+                # else:
+                #     logging.info("Skipping lineal differenciation")
 
 
 
