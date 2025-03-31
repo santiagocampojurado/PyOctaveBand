@@ -97,11 +97,11 @@ def plot_calibration_test(df: pd.DataFrame, output_path_plot: str, audio_file: s
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Calculate SPL levels for audio files in a directory')
     parser.add_argument('-p', '--path', type=str, required=True, help='Directory to be processed')
-    parser.add_argument('-lb', '--lower_bound', type=float, default=160.0, help='Lower bound for lineal differenciation')
-    parser.add_argument('-ub', '--upper_bound', type=float, default=166.0, help='Upper bound for lineal differenciation')
+    parser.add_argument('-lb', '--lower_bound', type=float, default=166.0, help='Lower bound for lineal differenciation')
+    parser.add_argument('-ub', '--upper_bound', type=float, default=169.0, help='Upper bound for lineal differenciation')
     parser.add_argument('-t', '--threshold', type=int, default=94, help='Threshold constant for the microphone')
     parser.add_argument('-c', '--calibration', type=float, default=None, help='Calibration coefficient')
-    parser.add_argument('--lineal_diff', action='store_true', help='Perform lineal differenciation')
+    parser.add_argument('-l', '--lineal_diff', action='store_true', help='Perform lineal differenciation')
     return parser.parse_args()
 
 
@@ -235,6 +235,16 @@ def main() -> None:
                 #save
                 df.to_csv(output_path, index=False)
                 logging.info(f'Output saved to {output_path}')
+
+
+                # ----------------
+                # SAVE LITTLE CSV FILE
+                # ----------------
+                # save the same csv but just the date, filename and SPECTRUM_COLUMNS_LITTLE columns
+                df_little = df[['date', 'filename'] + SPECTRUM_COLUMNS]
+                output_path_little = os.path.join(output_folder, f'{name_split}{cal_str}_little.csv')
+                df_little.to_csv(output_path_little, index=False)
+                logging.info(f'Output saved to {output_path_little}')
 
 
 
