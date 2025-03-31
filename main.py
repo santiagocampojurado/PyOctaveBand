@@ -97,8 +97,8 @@ def plot_calibration_test(df: pd.DataFrame, output_path_plot: str, audio_file: s
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Calculate SPL levels for audio files in a directory')
     parser.add_argument('-p', '--path', type=str, required=True, help='Directory to be processed')
-    parser.add_argument('-lb', '--lower_bound', type=float, default=175.0, help='Lower bound for lineal differenciation')
-    parser.add_argument('-ub', '--upper_bound', type=float, default=177.0, help='Upper bound for lineal differenciation')
+    parser.add_argument('-lb', '--lower_bound', type=float, default=160.0, help='Lower bound for lineal differenciation')
+    parser.add_argument('-ub', '--upper_bound', type=float, default=166.0, help='Upper bound for lineal differenciation')
     parser.add_argument('-t', '--threshold', type=int, default=94, help='Threshold constant for the microphone')
     parser.add_argument('-c', '--calibration', type=float, default=None, help='Calibration coefficient')
     parser.add_argument('--lineal_diff', action='store_true', help='Perform lineal differenciation')
@@ -107,6 +107,9 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def main() -> None:
+    r"""
+        usage: python.exe .\main.py -p "\\192.168.205.123\aac_server\CALIBRATION\NOISEPORT_TENERIFE_RP\3-Medidas\mic_1\" --lineal_diff
+    """
     args = parse_arguments()
 
     base_path = args.path
@@ -198,7 +201,10 @@ def main() -> None:
 
                     # testing octave band reduced
                     # def third_octave_filter(x, fs, order=6, limits=[12, 20000], show=False, sigbands=False, calibration_coeff=None):
+                    # logging.info("Processing third octave filter")
                     levels, freqs = PyOctaveBand_reduced.third_octave_filter(segment, fs, order=4, show=0, sigbands=0, calibration_coeff=calibration_coeff)
+
+                    # logging.info("Rounding levels")
                     levels = [round(level, 2) for level in levels]
                     
                     if freq_labels is None:
@@ -236,8 +242,8 @@ def main() -> None:
                 # PLOT CALIBRATION TEST
                 # ----------------
                 try:
-                    # output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}.png')
-                    output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}_test.png')
+                    output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}.png')
+                    # output_path_plot = os.path.join(output_folder, f'calibration_test_{name_split}{cal_str}_test.png')
                     plot_calibration_test(df, output_path_plot, audio_file)
                     logging.info(f"Calibration test plot saved to: {output_path_plot}")
                 except Exception as e:
@@ -247,16 +253,16 @@ def main() -> None:
                 # ----------------
                 # LINEAL DIFFERENCIATION
                 # ----------------
-                # if lineal_diff:
-                #     try:
-                #         output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}{cal_str}.csv')
-                #         lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
-                #         lineal_diff.to_csv(output_path_lineal, index=False)
-                #         logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
-                #     except Exception as e:
-                #         logging.error(f"Error in lineal differenciation: {e}")
-                # else:
-                #     logging.info("Skipping lineal differenciation")
+                if lineal_diff:
+                    try:
+                        output_path_lineal = os.path.join(output_folder, f'lineal_diff_{name_split}{cal_str}.csv')
+                        lineal_diff = lineal_differenciation(df, lower_bound, upper_bound, threshold_multifinction)
+                        lineal_diff.to_csv(output_path_lineal, index=False)
+                        logging.info(f"Lineal differenciation saved to: {output_path_lineal}")
+                    except Exception as e:
+                        logging.error(f"Error in lineal differenciation: {e}")
+                else:
+                    logging.info("Skipping lineal differenciation")
 
 
 

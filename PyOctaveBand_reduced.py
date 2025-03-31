@@ -55,8 +55,17 @@ def third_octave_filter(x, fs, order=6, limits=[12, 20000], show=False, sigbands
             # Reconstruct signal at original sampling rate
             xb.append(signal.resample_poly(y, factor[idx], 1))
             # Apply calibration if provided
+            # if calibration_coeff is not None:
+            #     spl[idx] += calibration_coeff[idx]
+            
             if calibration_coeff is not None:
-                spl[idx] += calibration_coeff[idx]
+                if isinstance(calibration_coeff, (list, tuple, np.ndarray)):
+                    spl[idx] += calibration_coeff[idx]
+                else:
+                    spl[idx] += calibration_coeff
+
+
+
         return spl.tolist(), freq, xb
     else:
         spl = np.zeros(len(freq))
@@ -64,8 +73,15 @@ def third_octave_filter(x, fs, order=6, limits=[12, 20000], show=False, sigbands
             sd = signal.resample(x, round(len(x) / factor[idx]))
             y = signal.sosfilt(sos[idx], sd)
             spl[idx] = 20 * np.log10(np.std(y) / 2e-5)
+            # if calibration_coeff is not None:
+            #     spl[idx] += calibration_coeff[idx]
+
             if calibration_coeff is not None:
-                spl[idx] += calibration_coeff[idx]
+                if isinstance(calibration_coeff, (list, tuple, np.ndarray)):
+                    spl[idx] += calibration_coeff[idx]
+                else:
+                    spl[idx] += calibration_coeff
+                    
         return spl.tolist(), freq
 
 
